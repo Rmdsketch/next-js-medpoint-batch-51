@@ -1,0 +1,9 @@
+site_name: "nextjs-medpoint-batch-51"
+site_description: "NextJS medpoint Pre IP batch 51"
+
+plugins:
+  - techdocs-core
+nav:
+  - Getting Started: index.md
+  - Convention : convention.md
+  - How To Run : how-to-run.md

@@ -1,0 +1,13 @@
+{
+  "HomePage": {
+    "title": "Hello world!",
+    "about": "Go to the about page",
+    "save": "Save",
+    "clear": "Clear",
+    "get": "Get",
+    "fetch": "Fetch",
+    "book": "Book",
+    "change": "Change",
+    "storage": "Storage"
+  }
+}

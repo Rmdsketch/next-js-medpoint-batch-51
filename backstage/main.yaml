@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "nextjs-medpoint-batch-51"
+  description: "NextJS medpoint Pre IP batch 51"
+  tags:
+    - nextjs
+  links:
+    - url: gitea.sev-2.com/pre-ip/next-js-medpoint-batch-51
+      title: Git Repository
+      icon : github
+  annotations:
+    backstage.io/techdocs-ref: dir:../docs
+spec:
+  type: website
+  owner: admission
+  lifecycle: development
+  system: admission
+  consumesApis:

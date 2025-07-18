@@ -1,0 +1,7 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: nextjs-medpoint-batch-51-screen-all
+  description: A collection of all component of nextjs-medpoint-batch-51-all
+spec:
+  type: screen

@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: ""nextjs-medpoint-batch-51"-catalog-all"
+  description: "A collection of all screen Backstage Components"
+spec:
+  targets:
+    - ./backstage/main.yaml
+    - ./backstage/all-screen.yaml
