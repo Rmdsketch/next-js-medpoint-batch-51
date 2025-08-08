@@ -1,65 +1,39 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { Box, Typography } from '@mui/material';
-
+import { useState } from 'react';
 import EmailField from './fields/email-fields';
 import PasswordField from './fields/password-fields';
 import LoginButton from './buttons/login-button';
+import { loginAction } from '../actions';
 
 export default function LoginAction() {
-  const supabase = createClientComponentClient();
-  const router = useRouter();
-
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const validateEmailFormat = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const formData = new FormData(e.currentTarget);
+  
+  const clientValidate = (formData: FormData) => {
     const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
-
-    if (!validateEmailFormat(email)) {
-      setError('Format email tidak sesuai.');
-      setLoading(false);
-      return;
-    }
-    
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (signInError) {
-      setError('Email atau password salah.');
-      setLoading(false);
-      return;
-    }
-    router.push('/dashboard');
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regex.test(email)) return 'Format email tidak sesuai.';
+    return null;
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit}>
+    <Box
+      component="form"
+      action={async (formData) => {
+        const err = clientValidate(formData);
+        if (err) { setError(err); return; }
+        await loginAction(formData);
+      }}
+    >
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
           {error}
         </Typography>
       )}
-
       <EmailField />
       <PasswordField />
-      <LoginButton disabled={loading} />
+      <LoginButton />
     </Box>
   );
 }

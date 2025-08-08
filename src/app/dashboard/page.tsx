@@ -9,6 +9,7 @@ import { redirect } from 'next/navigation';
 import { APP_LOGIN } from '@/constants';
 import { getUserLocale } from '@/actions/locale';
 import { getTheme } from '@/actions/theme';
+import LogoutButton from '@/app/auth/login/components/buttons/logout-button';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -26,6 +27,9 @@ export default async function DashboardPage() {
       <Header user={data.user} />
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <DrawerHeader />
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <LogoutButton redirectTo="/auth/login" />
+        </Box>
         <Typography sx={{ marginBottom: 2 }}>
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
           eiusmod tempor incididunt ut labore et dolore magna aliqua. Rhoncus
