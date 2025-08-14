@@ -40,10 +40,10 @@ jobs:
       - name: Pull Vercel env (production)
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Configure Git to use Gitea token for private deps
+      - name: Config Gitea Token for install dependencies
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
 
       - name: Write .env from DOTENV secret
         run: |
