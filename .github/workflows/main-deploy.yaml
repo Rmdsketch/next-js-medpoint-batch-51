@@ -2,9 +2,9 @@ name: Deploy CMS to Vercel
 
 on:
   push:
-    branches: [ "main" ]     
-    tags: [ "v*.*.*" ]     
-  workflow_dispatch: {}     
+    branches: [ "main" ]
+    tags:     [ "v*.*.*" ]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -16,6 +16,11 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      DOTENV:       ${{ secrets.DOTENV }}
+      GITEA_TOKEN:  ${{ secrets.GITEA_TOKEN }}
 
     steps:
       - name: Checkout source
@@ -33,22 +38,25 @@ jobs:
         run: npm i -g vercel@latest
 
       - name: Pull Vercel env (production)
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
       - name: Configure Git to use Gitea token for private deps
-        if: ${{ secrets.GITEA_TOKEN != '' }}
+        if: ${{ env.GITEA_TOKEN != '' }}
         run: |
-          git config --global url."https://oauth2:${{ secrets.GITEA_TOKEN }}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
 
       - name: Write .env from DOTENV secret
         run: |
-          echo "${{ secrets.DOTENV }}" > .env
+          printf '%s\n' "$DOTENV" > .env
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Build (production)
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
+          CI: 'true'
+        run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel (production)
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
