@@ -3,7 +3,7 @@ name: Deploy CMS to Vercel
 on:
   push:
     branches: [ "main" ]
-    tags:     [ "v*.*.*" ]
+    tags: [ "v*.*.*" ]
   workflow_dispatch: {}
 
 permissions:
@@ -40,16 +40,20 @@ jobs:
       - name: Pull Vercel env (production)
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Configure Git to use Gitea token for private deps
-        if: ${{ env.GITEA_TOKEN != '' }}
+      - name: Config Gitea Token for install dependencies
+        env:
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
-          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
-          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
-          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
-          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
-          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com/"
-          # Debug (optional)
-          git config --global -l | grep gitea || true
+          for from in \
+            "https://gitea.sev-2.com/" "https://gitea.sev-2.com" \
+            "ssh://gitea.sev-2.com/"   "ssh://gitea.sev-2.com" \
+            "ssh://git@gitea.sev-2.com/" "ssh://git@gitea.sev-2.com" \
+            "git@gitea.sev-2.com:" "git+ssh://gitea.sev-2.com/" "git+ssh://gitea.sev-2.com"
+          do
+            git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "$from"
+          done
+          # Debug (boleh hapus nanti)
+          git config --global -l | grep -E 'url\..*gitea' || true
 
       - name: Write .env from DOTENV secret
         run: |
