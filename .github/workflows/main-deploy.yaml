@@ -19,8 +19,8 @@ jobs:
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      DOTENV: ${{ secrets.DOTENV }}
-      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+      DOTENV:       ${{ secrets.DOTENV }}
+      GITEA_TOKEN:  ${{ secrets.GITEA_TOKEN }}
 
     steps:
       - name: Checkout source
@@ -40,18 +40,25 @@ jobs:
       - name: Pull Vercel env (production)
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Config Gitea Token for install dependencies
+      - name: Git Config for Gitea (use TOKEN over HTTPS)
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
+          # Cover semua varian prefix yang umum dipakai Yarn/libgit:
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "ssh://gitea.sev-2.com/refactory/"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "git@gitea.sev-2.com:refactory/"
+          git config --global -l | grep -E 'url\..*gitea' || true
 
       - name: Write .env from DOTENV secret
-        run: |
-          printf '%s\n' "$DOTENV" > .env
+        run: printf '%s\n' "$DOTENV" > .env
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
