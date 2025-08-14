@@ -6,13 +6,6 @@ on:
     tags: [ "v*.*.*" ]
   workflow_dispatch: {}
 
-permissions:
-  contents: read
-
-concurrency:
-  group: vercel-prod-deploy
-  cancel-in-progress: true
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,15 +17,18 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: https://github.com/actions/checkout@v4
 
       - name: Setup Node.js 20 + Yarn cache
-        uses: actions/setup-node@v4
+        uses: https://github.com/actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "yarn"
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Show where we are building
+        run: |
+          echo "CI on: ${GITHUB_SERVER_URL:-gitea.local?} (runner side)"
+          node -v && yarn -v
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
@@ -40,19 +36,12 @@ jobs:
       - name: Pull Vercel env (production)
         run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
 
-      - name: Git Config for Gitea (use TOKEN over HTTPS)
+      - name: Config Gitea Token for HTTPS installs (runner side)
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "git@gitea.sev-2.com:refactory/"
-
-      - name: Trust Gitea host key (avoid Host key verification failed)
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          ssh-keyscan -T 10 gitea.sev-2.com >> ~/.ssh/known_hosts
 
       - name: Write .env from DOTENV secret
         run: printf '%s\n' "$DOTENV" > .env
@@ -62,8 +51,8 @@ jobs:
 
       - name: Build (production)
         env:
-          NEXT_TELEMETRY_DISABLED: "1"
-          CI: "true"
+          NEXT_TELEMETRY_DISABLED: '1'
+          CI: 'true'
         run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel (production)
