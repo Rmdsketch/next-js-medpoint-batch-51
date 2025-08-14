@@ -43,9 +43,13 @@ jobs:
       - name: Configure Git to use Gitea token for private deps
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
+          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
+          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
+          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
+          git config --global url."https://${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com/"
+          # Debug (optional)
+          git config --global -l | grep gitea || true
 
       - name: Write .env from DOTENV secret
         run: |
