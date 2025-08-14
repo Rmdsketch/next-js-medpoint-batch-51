@@ -43,19 +43,16 @@ jobs:
       - name: Git Config for Gitea (use TOKEN over HTTPS)
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
-          # Cover semua varian prefix yang umum dipakai Yarn/libgit:
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com/"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git+ssh://gitea.sev-2.com"
-          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "ssh://gitea.sev-2.com/refactory/"
           git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "git@gitea.sev-2.com:refactory/"
-          git config --global -l | grep -E 'url\..*gitea' || true
+
+      - name: Trust Gitea host key (avoid Host key verification failed)
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -T 10 gitea.sev-2.com >> ~/.ssh/known_hosts
 
       - name: Write .env from DOTENV secret
         run: printf '%s\n' "$DOTENV" > .env
