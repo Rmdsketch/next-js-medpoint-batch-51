@@ -3,7 +3,7 @@ name: Deploy CMS to Vercel
 on:
   push:
     branches: [ "main" ]
-    tags:     [ "v*.*.*" ]
+    tags: [ "v*.*.*" ]
   workflow_dispatch: {}
 
 permissions:
@@ -19,8 +19,8 @@ jobs:
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      DOTENV:       ${{ secrets.DOTENV }}
-      GITEA_TOKEN:  ${{ secrets.GITEA_TOKEN }}
+      DOTENV: ${{ secrets.DOTENV }}
+      GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
 
     steps:
       - name: Checkout source
@@ -31,8 +31,8 @@ jobs:
       - name: Setup Node.js 20 + Yarn cache
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'yarn'
+          node-version: "20"
+          cache: "yarn"
 
       - name: Install Vercel CLI
         run: npm i -g vercel@latest
@@ -43,7 +43,11 @@ jobs:
       - name: Config Gitea Token for install dependencies
         if: ${{ env.GITEA_TOKEN != '' }}
         run: |
-          git config --global url."https://:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "git@gitea.sev-2.com:refactory/"
 
       - name: Write .env from DOTENV secret
         run: |
@@ -54,8 +58,8 @@ jobs:
 
       - name: Build (production)
         env:
-          NEXT_TELEMETRY_DISABLED: '1'
-          CI: 'true'
+          NEXT_TELEMETRY_DISABLED: "1"
+          CI: "true"
         run: vercel build --prod --token="$VERCEL_TOKEN"
 
       - name: Deploy to Vercel (production)
