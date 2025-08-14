@@ -1,71 +1,70 @@
-{
-  "name": "nextjs-medpoint-batch-51",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "eslint . --report-unused-disable-directives --max-warnings 0 --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "lint-staged": "lint-staged",
-    "prepare": "husky"
-  },
-  "dependencies": {
-    "@emotion/cache": "^11.14.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^6.3.1",
-    "@mui/material": "^6.3.1",
-    "@mui/material-nextjs": "^6.3.1",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
-    "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.53.0",
-    "axios": "^1.7.9",
-    "jekoneng-web-ui": "git+ssh://gitea.sev-2.com/refactory/jekoneng-web-ui#main",
-    "next": "15.1.4",
-    "next-intl": "^3.26.3",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^19.6.1",
-    "@commitlint/config-conventional": "^19.6.0",
-    "@commitlint/types": "^19.5.0",
-    "@eslint/eslintrc": "^3",
-    "@testing-library/dom": "^10.4.0",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.1.0",
-    "@types/jest": "^29.5.14",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "conventional-changelog-atom": "^5.0.0",
-    "eslint": "^9",
-    "eslint-config-next": "15.1.4",
-    "husky": "^9.1.7",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
-    "lint-staged": "^15.3.0",
-    "postcss": "^8",
-    "prettier": "^3.4.2",
-    "tailwindcss": "^3.4.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5"
-  },
-  "lint-staged": {
-    "*.+(ts|tsx)": [
-      "yarn lint",
-      "bash -c 'yarn check-types'"
-    ]
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-commit": "lint-staged && tsc --noEmit -p ./tsconfig.json"
-    }
-  },
-  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
-}
+name: Deploy CMS to Vercel
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*.*.*" ]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-prod-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      DOTENV:       ${{ secrets.DOTENV }}
+      GITEA_TOKEN:  ${{ secrets.GITEA_TOKEN }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20 + Yarn cache
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel env (production)
+        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Git Config for Gitea (use TOKEN over HTTPS)
+        if: ${{ env.GITEA_TOKEN != '' }}
+        run: |
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "ssh://git@gitea.sev-2.com/"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/".insteadOf "git@gitea.sev-2.com:"
+          git config --global url."https://oauth2:${GITEA_TOKEN}@gitea.sev-2.com/refactory/".insteadOf "git@gitea.sev-2.com:refactory/"
+
+      - name: Trust Gitea host key (avoid Host key verification failed)
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -T 10 gitea.sev-2.com >> ~/.ssh/known_hosts
+
+      - name: Write .env from DOTENV secret
+        run: printf '%s\n' "$DOTENV" > .env
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build (production)
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          CI: "true"
+        run: vercel build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to Vercel (production)
+        run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
