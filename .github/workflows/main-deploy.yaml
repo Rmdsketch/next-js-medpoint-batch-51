@@ -37,6 +37,8 @@ jobs:
 
       - name: Configure Git to use Gitea token for private deps
         if: ${{ secrets.GITEA_TOKEN != '' }}
+        env:
+         GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
         run: |
           git config --global url."https://oauth2:${{ secrets.GITEA_TOKEN }}@gitea.sev-2.com/".insteadOf "https://gitea.sev-2.com/"
 
